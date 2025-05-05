@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+  <title>Hostel Meals</title>
+  <script type="module">
+    // Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithPopup,
+      GoogleAuthProvider,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7IXqChQMUhTDRWCArWfgpigG6uxvQXFY",
+      authDomain: "hostelmeals.firebaseapp.com",
+      projectId: "hostelmeals",
+      storageBucket: "hostelmeals.appspot.com",
+      messagingSenderId: "688739513488",
+      appId: "1:688739513488:web:0063c92d45fda8a0ed1415"
+    };
+
+    const allowedEmails = ["nosibul.india@gmail.com", "mdnosibulislam786@gmail.com"];
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    window.signIn = async function () {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const email = result.user.email;
+        if (allowedEmails.includes(email)) {
+          document.getElementById("protected").style.display = "block";
+          document.getElementById("login").style.display = "none";
+        } else {
+          alert("Unauthorized email: " + email);
+          await signOut(auth);
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Login failed.");
+      }
+    };
+
+    window.signOutUser = async function () {
+      await signOut(auth);
+      document.getElementById("protected").style.display = "none";
+      document.getElementById("login").style.display = "block";
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user && allowedEmails.includes(user.email)) {
+        document.getElementById("protected").style.display = "block";
+        document.getElementById("login").style.display = "none";
+      } else {
+        document.getElementById("protected").style.display = "none";
+        document.getElementById("login").style.display = "block";
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>Hostel Meals</h1>
+
+  <!-- Login Button -->
+  <div id="login">
+    <button onclick="signIn()">Login with Google</button>
+  </div>
+
+  <!-- Protected Content -->
+  <div id="protected" style="display:none;">
+    <p>Welcome! You are logged in and approved.</p>
+    <button onclick="signOutUser()">Logout</button>
+    <hr>
+    <h2>Private Meal Data Section</h2>
+    <p>Today's meal: Rice, Dal, Egg Curry</p>
+  </div>
+
+</body></html>
