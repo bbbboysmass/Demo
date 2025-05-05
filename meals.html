@@ -1,0 +1,230 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hostel Mess System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+    }html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  color: white;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100vh;
+  background: url('https://lh3.googleusercontent.com/gps-cs-s/AC9h4nqjK0utP8JWuQcVzkyf_mpakWmInumY0Nwv0v65HMk8Fkem9VUXkk3glDkwek7x0FwVre1cLrtDXmes2YjJ8KIRuiwYlSo1tFj_YLSUyMJxXDRzJJAL9816lzUWLS9ZEnR20nMy=s416-w312-h416-n-k-no') no-repeat center center / cover;
+  opacity: 0.6;
+  z-index: -1;
+}
+
+header {
+  background-color: rgba(44, 62, 80, 0.9);
+  padding: 10px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.logo {
+  height: 40px;
+}
+
+h1 {
+  font-size: 20px;
+  margin: 0 auto;
+  text-align: center;
+  flex: 1;
+}
+
+.menu-button {
+  background: none;
+  border: 2px solid white;
+  color: white;
+  padding: 6px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+nav {
+  display: none;
+  flex-direction: column;
+  background-color: rgba(52, 73, 94, 0.9);
+  padding: 10px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+nav a:hover {
+  background-color: rgba(44, 62, 80, 0.8);
+  padding-left: 10px;
+}
+
+main {
+  flex: 1;
+  padding: 20px;
+  text-align: center;
+}
+
+.content-box {
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 900px;
+  margin: auto;
+}
+
+footer {
+  background-color: rgba(44, 62, 80, 0.9);
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-size: 14px;
+}
+
+@media (min-width: 600px) {
+  nav {
+    display: flex !important;
+    flex-direction: row;
+    justify-content: center;
+    gap: 15px;
+    background: none;
+  }
+
+  .menu-button {
+    display: none;
+  }
+}
+
+select, option, input[type="date"] {
+  margin: 10px;
+  padding: 6px;
+  border-radius: 6px;
+  border: none;
+  font-size: 16px;
+}
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <img class="logo" src="https://www.bbb.ac.in/public/site_setting/1723794255.png" alt="Hostel Logo">
+      <h1>Mess Community</h1>
+      <button class="menu-button" onclick="toggleMenu()">Menu</button>
+    </div>
+    <nav id="mainMenu">
+      <a href="index.html">Home</a>
+      <a href="meals.html">Delay Meals Summary</a>
+      <a href="weekmenu.html">Weekly Menu</a>
+      <a href="family.html">Our Family</a>
+    </nav>
+  </header>
+  <main>
+    <div class="content-box">
+      <h2>Monthly Meals Summary</h2>
+      <div id="monthly-summary">Loading summary...</div>
+      <hr>
+      <h2>Meals on Specific Date</h2>
+      <input type="date" id="datePicker">
+      <div id="selected-meals">Select a date to view meals.</div>
+    </div>
+  </main>
+  <footer>
+    © 2025 Hostel Mess Team
+  </footer>  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('mainMenu');
+      menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQlnT70ou8fpNpzHm75PujgaLKwq-2aHxsmZyPqCGw09eZH6VV04isz_6nfxmv6U2Z_X4rsNW5vgtVL/pub?output=csv';
+
+    fetch(sheetUrl)
+      .then(res => res.text())
+      .then(data => {
+        const rows = data.split('\n').map(row => row.split(','));
+        const headers = rows[0];
+        const records = rows.slice(1).map(row => {
+          const record = {};
+          headers.forEach((header, i) => {
+            record[header.trim()] = row[i]?.trim();
+          });
+          return record;
+        });
+
+        displayMonthlySummary(records);
+
+        document.getElementById('datePicker').addEventListener('change', () => {
+          const date = document.getElementById('datePicker').value;
+          displaySelectedMeals(records, date);
+        });
+      });
+
+    function displayMonthlySummary(data) {
+      const summary = {};
+      data.forEach(row => {
+        for (let key in row) {
+          if (key !== 'Date' && row[key]) {
+            if (!summary[key]) summary[key] = { Lunch: 0, Dinner: 0 };
+            if (row[key].toLowerCase().includes('lunch')) summary[key].Lunch++;
+            if (row[key].toLowerCase().includes('dinner')) summary[key].Dinner++;
+          }
+        }
+      });
+
+      let html = '<ul style="text-align:left">';
+      for (let name in summary) {
+        const lunch = summary[name].Lunch;
+        const dinner = summary[name].Dinner;
+        const total = lunch + dinner;
+        html += `<li><strong>${name}</strong>: ${total} Meals (${lunch} Lunch & ${dinner} Dinner)</li>`;
+      }
+      html += '</ul>';
+      document.getElementById('monthly-summary').innerHTML = html;
+    }
+
+    function displaySelectedMeals(data, selectedDate) {
+      const matching = data.find(row => row['Date'] === selectedDate);
+      if (!matching) {
+        document.getElementById('selected-meals').innerHTML = 'No records found for this date.';
+        return;
+      }
+
+      let lunchList = [];
+      let dinnerList = [];
+      for (let key in matching) {
+        if (key !== 'Date' && matching[key]) {
+          const meal = matching[key].toLowerCase();
+          if (meal.includes('lunch')) lunchList.push(key);
+          if (meal.includes('dinner')) dinnerList.push(key);
+        }
+      }
+
+      document.getElementById('selected-meals').innerHTML = `
+        <h3>Lunch (${lunchList.length}):</h3>
+        <ul>${lunchList.map(name => `<li>${name}</li>`).join('')}</ul>
+        <h3>Dinner (${dinnerList.length}):</h3>
+        <ul>${dinnerList.map(name => `<li>${name}</li>`).join('')}</ul>
+      `;
+    }
+  </script></body>
+</html>
