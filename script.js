@@ -1,30 +1,36 @@
-const url = 'Super syllabus.pdf';  // Change this to your PDF path
+const url = 'Super Syllabus.pdf'; // Replace with your PDF file path
 const canvas = document.getElementById('pdf-canvas');
 const ctx = canvas.getContext('2d');
 
 let pdfDoc = null;
 let pageNum = 1;
 
-pdfjsLib.getDocument(url).promise.then((doc) => {
-  pdfDoc = doc;
-  renderPage(pageNum);
-});
-
 function renderPage(num) {
   pdfDoc.getPage(num).then((page) => {
-    const viewport = page.getViewport({ scale: 1.5 });
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
+    const viewport = page.getViewport({ scale: 1 });
+
+    // Fit PDF width to screen width
+    const scale = window.innerWidth / viewport.width;
+    const scaledViewport = page.getViewport({ scale });
+
+    canvas.width = scaledViewport.width;
+    canvas.height = scaledViewport.height;
 
     const renderCtx = {
       canvasContext: ctx,
-      viewport: viewport,
+      viewport: scaledViewport,
     };
     page.render(renderCtx);
   });
 }
 
-// Swipe control
+// Load PDF
+pdfjsLib.getDocument(url).promise.then((doc) => {
+  pdfDoc = doc;
+  renderPage(pageNum);
+});
+
+// Swipe Controls
 const hammer = new Hammer(canvas);
 hammer.on('swipeleft', () => {
   if (pageNum < pdfDoc.numPages) {
@@ -37,4 +43,9 @@ hammer.on('swiperight', () => {
     pageNum--;
     renderPage(pageNum);
   }
+});
+
+// Re-render on window resize
+window.addEventListener('resize', () => {
+  if (pdfDoc) renderPage(pageNum);
 });
