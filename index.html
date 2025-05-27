@@ -3,23 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PDF Viewer Swipe</title>
+  <title>Swipe PDF Viewer</title>
   <style>
     body {
-  margin: 0;
-  overflow: hidden;
-  background: #111;
-}
-canvas {
-  display: block;
-  margin: auto;
-}  </style>
+      margin: 0;
+      overflow: hidden;
+      background-color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    canvas {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      background: #fff;
+    }
+  </style>
 </head>
 <body>
-  <canvas id="pdf-canvas"></canvas>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
-  <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
-  <script src="script.js"></script>
+<canvas id="pdf-canvas"></canvas>
+
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+<!-- Hammer.js -->
+<script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
+
+<script>
+  const url = 'Super syllabus.pdf'; // Make sure 'sample.pdf' is in the same folder
+  const canvas = document.getElementById('pdf-canvas');
+  const ctx = canvas.getContext('2d');
+
+  let pdfDoc = null;
+  let pageNum = 1;
+
+  function renderPage(num) {
+    pdfDoc.getPage(num).then((page) => {
+      const viewport = page.getViewport({ scale: 1 });
+      const scale = window.innerWidth / viewport.width;
+      const scaledViewport = page.getViewport({ scale });
+
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+
+      const renderCtx = {
+        canvasContext: ctx,
+        viewport: scaledViewport,
+      };
+      page.render(renderCtx);
+    });
+  }
+
+  pdfjsLib.getDocument(url).promise.then((doc) => {
+    pdfDoc = doc;
+    renderPage(pageNum);
+  });
+
+  const hammer = new Hammer(canvas);
+  hammer.on('swipeleft', () => {
+    if (pageNum < pdfDoc.numPages) {
+      pageNum++;
+      renderPage(pageNum);
+    }
+  });
+  hammer.on('swiperight', () => {
+    if (pageNum > 1) {
+      pageNum--;
+      renderPage(pageNum);
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (pdfDoc) renderPage(pageNum);
+  });
+</script>
+
 </body>
 </html>
