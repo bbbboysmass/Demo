@@ -1,4 +1,4 @@
-const url = 'your-pdf-file.pdf';  // Change this to your PDF path
+const url = 'Super syllabus.pdf';  // Change this to your PDF path
 const canvas = document.getElementById('pdf-canvas');
 const ctx = canvas.getContext('2d');
 
